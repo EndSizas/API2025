@@ -30,13 +30,14 @@ app.use(express.urlencoded({extended:true})) //se añade para poder receptar por
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 
+
 app.use('/api/auth',authRoutes)
 //Nuestras rutas protegidas
-app.use('/api/',  clientesRoutes)
-app.use('/api', usuariosRoutes)
-app.use('/api', productosRoutes)
-app.use('/api', pedidosdetRoutes)
-app.use('/api', pedidosRoutes)
+app.use('/api/', /*authenticateToken,*/ clientesRoutes)
+app.use('/api', /*authenticateToken,*/ usuariosRoutes)
+app.use('/api',/*authenticateToken,*/ productosRoutes)
+app.use('/api', /*authenticateToken,*/ pedidosdetRoutes)
+app.use('/api', /*authenticateToken,*/ pedidosRoutes)
 
 
 app.use((req,resp,next)=>{
