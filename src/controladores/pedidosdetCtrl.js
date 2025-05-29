@@ -23,19 +23,29 @@ export const getpedidosdetxid= async(req, res)=>{
     }
 }
 
-export const postPedidosdet=
-async (req,res)=>{
- try {
-   const {prod_id, ped_id, det_cantidad, det_precio}=req.body
-   const[rows]=await conmysql.query('insert into pedidos_detalle (prod_id, ped_id, det_cantidad, det_precio ) values(?,?,?,?)',
-    [prod_id, ped_id, det_cantidad, det_precio])
-    res.send({
-        id:rows.insertId
-    })
- } catch (error) {
-    return res.status(500).json({message:"error del lado del servidor"})
- }
-}
+export const postPedidosdet = async (req, res) => {
+  try {
+    const { detalles } = req.body;
+
+    if (!Array.isArray(detalles) || detalles.length === 0) {
+      return res.status(400).json({ message: "No se enviaron detalles válidos" });
+    }
+
+    for (const detalle of detalles) {
+      const { prod_id, ped_id, det_cantidad, det_precio } = detalle;
+      await conmysql.query(
+        'INSERT INTO pedidos_detalle (prod_id, ped_id, det_cantidad, det_precio) VALUES (?, ?, ?, ?)',
+        [prod_id, ped_id, det_cantidad, det_precio]
+      );
+    }
+
+    res.status(201).json({ message: "Detalles guardados correctamente" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al guardar los detalles del pedido" });
+  }
+};
+
 
 export const putPedidosdet=
 async (req,res)=>{
