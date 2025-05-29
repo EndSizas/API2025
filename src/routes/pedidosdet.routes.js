@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { postMultiplePedidosdet } from './controladores/pedidodetCtrl.js';
-import {  getPedidosdet, getpedidosdetxid, patchPedidosdet, postPedidosdet, putPedidosdet, deletePedidosdet } from '../controladores/pedidosdetCtrl.js'
+import {  getPedidosdet, getpedidosdetxid, patchPedidosdet,postMultiplePedidosdet, postPedidosdet, putPedidosdet, deletePedidosdet } from '../controladores/pedidosdetCtrl.js'
 const router=Router();
 
 router.get('/pedidosdet',getPedidosdet )
