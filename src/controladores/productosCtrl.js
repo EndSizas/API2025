@@ -78,10 +78,16 @@ export const postProducto = async (req, res) => {
       }
     }
 
+    // Convertir prod_activo a entero (0 o 1)
+    let activo = 0;
+    if (prod_activo === true || prod_activo === 'true' || prod_activo === 1 || prod_activo === '1') {
+      activo = 1;
+    }
+
     // Insertar producto
     const [rows] = await conmysql.query(
       'INSERT INTO productos (prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo, prod_imagen) VALUES (?, ?, ?, ?, ?, ?)',
-      [prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo, prod_imagen]
+      [prod_codigo, prod_nombre, prod_stock, prod_precio, activo, prod_imagen]
     );
 
     res.status(201).json({
