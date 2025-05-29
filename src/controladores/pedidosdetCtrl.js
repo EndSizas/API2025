@@ -71,6 +71,30 @@ async (req,res)=>{
  }
 }
 
+export const postMultiplePedidosdet = async (req, res) => {
+  try {
+    const { detalles, ped_id } = req.body;
+
+    if (!Array.isArray(detalles) || detalles.length === 0) {
+      return res.status(400).json({ message: "No hay detalles para guardar" });
+    }
+
+    for (let det of detalles) {
+      const { prod_id, det_precio, det_cantidad } = det;
+      await conmysql.query(
+        'INSERT INTO pedidos_detalle (prod_id, ped_id, det_cantidad, det_precio) VALUES (?, ?, ?, ?)',
+        [prod_id, ped_id, det_cantidad, det_precio]
+      );
+    }
+
+    res.json({ message: "Detalles del pedido guardados correctamente" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error al guardar detalles del pedido" });
+  }
+};
+
+
 export const deletePedidosdet=
 async(req, res)=>{
     try {
