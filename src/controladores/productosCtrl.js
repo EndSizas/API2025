@@ -1,19 +1,4 @@
 import { conmysql } from "../db.js"
-import { v2 as cloudinary } from 'cloudinary';
-import multer from 'multer';
-
-
-// Configurar Cloudinary
-cloudinary.config({
-    cloud_name: 'dqxjdfncz',  // Reemplaza con tu Cloud Name
-    api_key: '972776657996249',        // Reemplaza con tu API Key
-    api_secret: '5F2PB9yT5_xycNG_vKyegoOoMc8'   // Reemplaza con tu API Secret
-});
-// Configuración de Multer para subir imágenes
-const storage = multer.memoryStorage();  // Para almacenar en memoria antes de enviar a Cloudinary
-const upload = multer({ storage: storage }).array('imagenes[]'); // 'imagenes[]' es la clave de los campos
-export { upload };
-
 
 export const getProductos = async (req, res) => {
   try {
@@ -40,35 +25,11 @@ export const getproductosxid = async (req, res) => {
 export const postProducto = async (req, res) => {
   try {
     const { prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo } = req.body;
+    const prod_imagen = req.file ? `/uploads/${req.file.filename}` : null;
 
-    // Validar campos básicos
-    if (!prod_codigo || !prod_nombre) {
-      return res.status(400).json({ message: "Código y nombre son obligatorios" });
-    }
-
-    // Verificar existencia de código
     const [existente] = await conmysql.query('SELECT prod_id FROM productos WHERE prod_codigo = ?', [prod_codigo]);
     if (existente.length > 0) {
       return res.status(400).json({ message: "El código de producto ya existe" });
-    }
-
-    let prod_imagen = null;
-
-    if (req.files && req.files.length > 0) {
-      prod_imagen = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream({
-          folder: 'productos',
-          resource_type: 'auto',
-        }, (error, result) => {
-          if (error) {
-            console.error("Error subida imagen Cloudinary:", error);
-            return reject(error);
-          }
-          resolve(result.secure_url);
-        });
-
-        stream.end(req.files[0].buffer);
-      });
     }
 
     if (prod_imagen) {
@@ -78,30 +39,19 @@ export const postProducto = async (req, res) => {
       }
     }
 
-    // Convertir prod_activo a entero (0 o 1)
-    let activo = 0;
-    if (prod_activo === true || prod_activo === 'true' || prod_activo === 1 || prod_activo === '1') {
-      activo = 1;
-    }
-
-    // Insertar producto
     const [rows] = await conmysql.query(
       'INSERT INTO productos (prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo, prod_imagen) VALUES (?, ?, ?, ?, ?, ?)',
-      [prod_codigo, prod_nombre, prod_stock, prod_precio, activo, prod_imagen]
+      [prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo, prod_imagen]
     );
 
-    res.status(201).json({
+    res.send({
       id: rows.insertId,
-      prod_imagen,
       message: "Producto creado"
     });
   } catch (error) {
-    console.error("Error en postProducto:", error);
-    return res.status(500).json({ message: 'Error del lado del servidor', error: error.message || error.toString() });
+    return res.status(500).json({ message: 'error del lado del servidor' });
   }
 };
-
-
 
 export const putProducto = async (req, res) => {
   try {
