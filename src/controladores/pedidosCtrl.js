@@ -37,6 +37,41 @@ async (req,res)=>{
  }
 }
 
+export const postPedidoConDetalles = async (req, res) => {
+  const conn = await conmysql.getConnection(); // usar conexión transaccional
+  await conn.beginTransaction();
+  try {
+    const { usr_id, ped_fecha, cli_id, ped_estado, detalles } = req.body;
+
+    // Insertar el pedido
+    const [pedidoRes] = await conn.query(
+      'INSERT INTO pedidos (usr_id, ped_fecha, cli_id, ped_estado) VALUES (?, ?, ?, ?)',
+      [usr_id, ped_fecha, cli_id, ped_estado]
+    );
+
+    const ped_id = pedidoRes.insertId;
+
+    // Insertar los detalles del pedido
+    for (const det of detalles) {
+      const { prod_id, det_cantidad, det_precio } = det;
+      await conn.query(
+        'INSERT INTO pedidos_detalle (prod_id, ped_id, det_cantidad, det_precio) VALUES (?, ?, ?, ?)',
+        [prod_id, ped_id, det_cantidad, det_precio]
+      );
+    }
+
+    await conn.commit();
+    res.status(201).json({ message: 'Pedido y detalles guardados correctamente', ped_id });
+  } catch (error) {
+    await conn.rollback();
+    console.error(error);
+    res.status(500).json({ message: 'Error al guardar el pedido con sus detalles' });
+  } finally {
+    conn.release();
+  }
+};
+
+
 export const putPedidos=
 async (req,res)=>{
  try {
