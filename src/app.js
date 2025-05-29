@@ -17,7 +17,7 @@ const __dirname=path.dirname(__filename);
 
 //definir los permisos
 const corsOptions={
-    origin:'http://localhost:8100', //la direccion del dominio del servidor
+    origin:'*', //la direccion del dominio del servidor
     methods:['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials:true
 }

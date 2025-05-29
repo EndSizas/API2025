@@ -9,6 +9,4 @@ router.put('/pedidos/:id', putPedidos)
 router.patch('/pedidos/:id', patchPedidos)
 router.delete('/pedidos/:id', deletePedidos)
 
-
-
 export default router;

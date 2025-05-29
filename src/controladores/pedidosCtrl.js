@@ -37,20 +37,6 @@ async (req,res)=>{
  }
 }
 
-export const postPedidosdet = async (req, res) => {
-  try {
-    const { prod_id, ped_id, det_cantidad, det_precio } = req.body;
-    const [rows] = await conmysql.query(
-      'insert into pedidos_detalle (prod_id, ped_id, det_cantidad, det_precio ) values(?,?,?,?)',
-      [prod_id, ped_id, det_cantidad, det_precio]
-    );
-    res.send({ id: rows.insertId });
-  } catch (error) {
-    return res.status(500).json({ message: "error del lado del servidor" });
-  }
-};
-
-
 export const putPedidos=
 async (req,res)=>{
  try {
