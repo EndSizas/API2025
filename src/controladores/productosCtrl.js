@@ -41,6 +41,12 @@ export const postProducto = async (req, res) => {
   try {
     const { prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo } = req.body;
 
+    // Validar campos básicos
+    if (!prod_codigo || !prod_nombre) {
+      return res.status(400).json({ message: "Código y nombre son obligatorios" });
+    }
+
+    // Verificar existencia de código
     const [existente] = await conmysql.query('SELECT prod_id FROM productos WHERE prod_codigo = ?', [prod_codigo]);
     if (existente.length > 0) {
       return res.status(400).json({ message: "El código de producto ya existe" });
@@ -49,23 +55,15 @@ export const postProducto = async (req, res) => {
     let prod_imagen = null;
 
     if (req.files && req.files.length > 0) {
-      const uploadPromises = req.files.map(file => 
-        cloudinary.uploader.upload_stream({
-          folder: CLOUDINARY_FOLDER,
-          resource_type: "image",
-        }, async (error, result) => {
-          if (error) throw new Error("Error al subir imagen a Cloudinary");
-          return result.secure_url;
-        })
-      );
-
-      // Subimos la primera imagen, podrías adaptarlo para múltiples si lo deseas
       prod_imagen = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream({
-          folder: 'productos', // Guardar en carpeta general usuarios_perfiles
+          folder: 'productos',
           resource_type: 'auto',
         }, (error, result) => {
-          if (error) return reject(error);
+          if (error) {
+            console.error("Error subida imagen Cloudinary:", error);
+            return reject(error);
+          }
           resolve(result.secure_url);
         });
 
@@ -73,26 +71,30 @@ export const postProducto = async (req, res) => {
       });
     }
 
-    const [imagenExistente] = await conmysql.query('SELECT prod_id FROM productos WHERE prod_imagen = ?', [prod_imagen]);
-    if (prod_imagen && imagenExistente.length > 0) {
-      return res.status(400).json({ message: "El nombre de la imagen ya está en uso" });
+    if (prod_imagen) {
+      const [imagenExistente] = await conmysql.query('SELECT prod_id FROM productos WHERE prod_imagen = ?', [prod_imagen]);
+      if (imagenExistente.length > 0) {
+        return res.status(400).json({ message: "El nombre de la imagen ya está en uso" });
+      }
     }
 
+    // Insertar producto
     const [rows] = await conmysql.query(
       'INSERT INTO productos (prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo, prod_imagen) VALUES (?, ?, ?, ?, ?, ?)',
       [prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo, prod_imagen]
     );
 
-    res.send({
+    res.status(201).json({
       id: rows.insertId,
       prod_imagen,
       message: "Producto creado"
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Error del lado del servidor' });
+    console.error("Error en postProducto:", error);
+    return res.status(500).json({ message: 'Error del lado del servidor', error: error.message || error.toString() });
   }
 };
+
 
 
 export const putProducto = async (req, res) => {
