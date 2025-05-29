@@ -31,18 +31,23 @@ export const postPedidosdet = async (req, res) => {
       return res.status(400).json({ message: "No se enviaron detalles válidos" });
     }
 
+    // 1. Crear un nuevo pedido en la tabla `pedidos` (ajusta según tu tabla real)
+    const [pedidoResult] = await conmysql.query('INSERT INTO pedidos (ped_fecha) VALUES (NOW())');
+    const ped_id = pedidoResult.insertId;
+
+    // 2. Insertar los detalles con ese ped_id
     for (const detalle of detalles) {
-      const { prod_id, ped_id, det_cantidad, det_precio } = detalle;
+      const { prod_id, det_cantidad, det_precio } = detalle;
       await conmysql.query(
         'INSERT INTO pedidos_detalle (prod_id, ped_id, det_cantidad, det_precio) VALUES (?, ?, ?, ?)',
         [prod_id, ped_id, det_cantidad, det_precio]
       );
     }
 
-    res.status(201).json({ message: "Detalles guardados correctamente" });
+    res.status(201).json({ message: "Pedido y detalles guardados", ped_id });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error al guardar los detalles del pedido" });
+    res.status(500).json({ message: "Error al guardar el pedido y sus detalles" });
   }
 };
 
