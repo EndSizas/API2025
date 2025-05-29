@@ -25,17 +25,21 @@ export const getpedidosdetxid= async(req, res)=>{
 
 export const postPedidosdet = async (req, res) => {
   try {
-    const { detalles } = req.body;
+    const { usr_id, cli_id, ped_estado, detalles } = req.body;
 
+    if (!usr_id || !cli_id || !ped_estado) {
+      return res.status(400).json({ message: "Faltan datos del pedido" });
+    }
     if (!Array.isArray(detalles) || detalles.length === 0) {
       return res.status(400).json({ message: "No se enviaron detalles válidos" });
     }
 
-    // 1. Crear un nuevo pedido en la tabla `pedidos` (ajusta según tu tabla real)
-    const [pedidoResult] = await conmysql.query('INSERT INTO pedidos (ped_fecha) VALUES (NOW())');
+    const [pedidoResult] = await conmysql.query(
+      'INSERT INTO pedidos (usr_id, cli_id, ped_fecha, ped_estado) VALUES (?, ?, NOW(), ?)',
+      [usr_id, cli_id, ped_estado]
+    );
     const ped_id = pedidoResult.insertId;
 
-    // 2. Insertar los detalles con ese ped_id
     for (const detalle of detalles) {
       const { prod_id, det_cantidad, det_precio } = detalle;
       await conmysql.query(
