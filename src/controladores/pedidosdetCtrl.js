@@ -88,24 +88,29 @@ async (req,res)=>{
 
 export const postMultiplePedidosdet = async (req, res) => {
   try {
-    const { detalles, ped_id } = req.body;
+    const { detalles } = req.body; // Array de detalles [{prod_id, ped_id, det_cantidad, det_precio}, ...]
 
     if (!Array.isArray(detalles) || detalles.length === 0) {
-      return res.status(400).json({ message: "No hay detalles para guardar" });
+      return res.status(400).json({ message: "Detalles inválidos" });
     }
 
-    for (let det of detalles) {
-      const { prod_id, det_precio, det_cantidad } = det;
-      await conmysql.query(
-        'INSERT INTO pedidos_detalle (prod_id, ped_id, det_cantidad, det_precio) VALUES (?, ?, ?, ?)',
-        [prod_id, ped_id, det_cantidad, det_precio]
-      );
-    }
+    // Construir consulta para insertar varios detalles
+    let values = [];
+    let placeholders = [];
 
-    res.json({ message: "Detalles del pedido guardados correctamente" });
+    detalles.forEach(d => {
+      placeholders.push("(?,?,?,?)");
+      values.push(d.prod_id, d.ped_id, d.det_cantidad, d.det_precio);
+    });
+
+    const sql = `INSERT INTO pedidos_detalle (prod_id, ped_id, det_cantidad, det_precio) VALUES ${placeholders.join(",")}`;
+
+    const [result] = await conmysql.query(sql, values);
+
+    res.json({ message: "Detalles guardados", insertedRows: result.affectedRows });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error al guardar detalles del pedido" });
+    console.log(error);
+    res.status(500).json({ message: "Error al guardar detalles múltiples" });
   }
 };
 
